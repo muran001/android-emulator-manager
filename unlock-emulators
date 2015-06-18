@@ -3,5 +3,7 @@
 DEVICES=$(adb devices | sed "1d;s/[[:space:]].*$//")
 for device in $DEVICES
 do
+    echo "unlocking $device"
     adb -s $device shell input keyevent 82
+    echo "unlocked $device"
 done
