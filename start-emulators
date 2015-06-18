@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+ 
+spinstr='|/-\'
+spin_index=0
+ 
+spin_until () {
+    while ! $@
+    do
+        spin_index=$(expr $(expr $spin_index + 1) % 4)
+        printf "\r${spinstr:spin_index:1}"
+        sleep 0.5
+    done
+    printf "\r"
+}
+ 
+adb_shell_getprop () {
+    adb -s $1 shell getprop $2 | tr -d [:space:] # delete the whitespace
+}
+ 
+device_actually_ready () {
+    [ "$(adb_shell_getprop $1 init.svc.bootanim)" = "stopped" ]
+}
+
+adb start-server
+DEVICES=$(adb devices | sed "1d;s/[[:space:]].*$//")
+echo "target devices = $DEVICES"
+for device in $DEVICES
+do
+    echo "$device is responding"
+    # wait for the device to respond to shell commands
+    spin_until adb -s $device shell true 2> /dev/null
+    # wait for the emulator to be completely finished booting.
+    echo "$device is responded"
+    echo "$device is starting"
+    # adb wait-for-device is not sufficient for this.
+    spin_until device_actually_ready $device
+    echo "$device is started"
+    sleep 10
+    adb -s $device shell input keyevent 82
+done

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+DEVICES=$(adb devices | sed "1d;s/[[:space:]].*$//")
+for device in $DEVICES
+do
+    adb -s $device shell input keyevent 82
+done
